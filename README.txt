@@ -15,3 +15,5 @@ wysyła dane diagnostyczne do Serial Monitora.
 Licencja
 
 CC0 - projekt mozna kopiować, modyfikować i wykorzystywać bez ograniczeń.
+
+Link do filmu na YouTube: https://www.youtube.com/watch?v=8DWhpTehUVE
