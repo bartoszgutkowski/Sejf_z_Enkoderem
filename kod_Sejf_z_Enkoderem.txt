@@ -1,0 +1,292 @@
+//Projekt: Sejf z Enkoderem - test LCD, enkodera, HC-SR04, potencjometru, serwa i diod LED
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+Servo servo;
+
+//piny
+const int encCLK = 2;
+const int encDT = 3;
+const int encSW = 4;
+
+const int trigPin = 5;
+const int echoPin = 6;
+
+const int servoPin = 9;
+
+const int ledGreen = 10;
+const int ledYellow = 11;
+const int ledRed = 12;
+
+const int potPin = A0;
+
+//zmienne
+int encValue = 0;
+int lastCLK = HIGH;
+
+int potValue = 0;
+int servoAngle = 0;
+long distanceCm = -1;
+
+bool encClicked = false;
+
+unsigned long lastDistanceTime = 0;
+unsigned long lastLcdTime = 0;
+unsigned long lastSerialTime = 0;
+unsigned long lastServoTime = 0;
+unsigned long lastEncoderTime = 0;
+
+const unsigned long encoderDelay = 140;
+
+int lcdPage = 0;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(encCLK, INPUT_PULLUP);
+  pinMode(encDT, INPUT_PULLUP);
+  pinMode(encSW, INPUT_PULLUP);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(ledGreen, OUTPUT);
+  pinMode(ledYellow, OUTPUT);
+  pinMode(ledRed, OUTPUT);
+
+  servo.attach(servoPin);
+  servo.write(90);
+
+  lcd.init();
+  lcd.backlight();
+
+  lastCLK = digitalRead(encCLK);
+
+  startTest();
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Test gotowy");
+  lcd.setCursor(0, 1);
+  lcd.print("Krec enkoder");
+  delay(1000);
+}
+
+void loop() {
+  readEncoder();
+  readEncoderButton();
+  readPot();
+  readDistance();
+  updateLeds();
+  updateLcd();
+  debugSerial();
+}
+
+//krotki test po wlaczeniu ukladu
+void startTest() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Encoder Vault");
+  lcd.setCursor(0, 1);
+  lcd.print("Start testu");
+
+  digitalWrite(ledGreen, HIGH);
+  delay(250);
+  digitalWrite(ledGreen, LOW);
+
+  digitalWrite(ledYellow, HIGH);
+  delay(250);
+  digitalWrite(ledYellow, LOW);
+
+  digitalWrite(ledRed, HIGH);
+  delay(250);
+  digitalWrite(ledRed, LOW);
+
+  servo.write(0);
+  delay(300);
+  servo.write(90);
+  delay(300);
+  servo.write(0);
+  delay(300);
+}
+
+//odczyt obrotu enkodera
+void readEncoder() {
+  int clkNow = digitalRead(encCLK);
+
+  if (lastCLK == HIGH && clkNow == LOW) {
+    if (millis() - lastEncoderTime >= encoderDelay) {
+      lastEncoderTime = millis();
+
+      if (digitalRead(encDT) == HIGH) {
+        encValue++;
+      } else {
+        encValue--;
+      }
+
+      if (encValue > 9) encValue = 0;
+      if (encValue < 0) encValue = 9;
+    }
+  }
+
+  lastCLK = clkNow;
+}
+
+//klikniecie enkodera
+void readEncoderButton() {
+  static bool lastButton = HIGH;
+  bool buttonNow = digitalRead(encSW);
+
+  if (lastButton == HIGH && buttonNow == LOW) {
+    encClicked = true;
+  }
+
+  lastButton = buttonNow;
+}
+
+//potencjometr steruje katem serwa
+void readPot() {
+  if (millis() - lastServoTime >= 40) {
+    lastServoTime = millis();
+
+    potValue = analogRead(potPin);
+    servoAngle = map(potValue, 0, 1023, 0, 180);
+
+    servo.write(servoAngle);
+  }
+}
+
+//pomiar odleglosci z HC-SR04
+void readDistance() {
+  if (millis() - lastDistanceTime >= 150) {
+    lastDistanceTime = millis();
+
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    unsigned long time = pulseIn(echoPin, HIGH, 25000);
+
+    if (time == 0) {
+      distanceCm = -1;
+    } else {
+      distanceCm = time / 58;
+    }
+  }
+}
+
+//diody zalezne od odleglosci
+void updateLeds() {
+  if (distanceCm < 0) {
+    digitalWrite(ledGreen, LOW);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledRed, (millis() / 500) % 2);
+    return;
+  }
+
+  if (distanceCm > 30) {
+    digitalWrite(ledGreen, HIGH);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledRed, LOW);
+  } else if (distanceCm > 20) {
+    digitalWrite(ledGreen, LOW);
+    digitalWrite(ledYellow, HIGH);
+    digitalWrite(ledRed, LOW);
+  } else if (distanceCm > 10) {
+    digitalWrite(ledGreen, LOW);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledRed, HIGH);
+  } else {
+    digitalWrite(ledGreen, LOW);
+    digitalWrite(ledYellow, LOW);
+    digitalWrite(ledRed, (millis() / 150) % 2);
+  }
+}
+
+//wyswietlanie danych na LCD
+void updateLcd() {
+  if (millis() - lastLcdTime >= 1500) {
+    lastLcdTime = millis();
+
+    lcdPage++;
+    if (lcdPage > 2) lcdPage = 0;
+
+    lcd.clear();
+
+    if (lcdPage == 0) {
+      lcd.setCursor(0, 0);
+      lcd.print("Odleglosc:");
+
+      if (distanceCm < 0) {
+        lcd.print("ERR");
+      } else {
+        lcd.print(distanceCm);
+        lcd.print("cm");
+      }
+
+      lcd.setCursor(0, 1);
+      lcd.print("Progi 10/20/30");
+    }
+
+    if (lcdPage == 1) {
+      lcd.setCursor(0, 0);
+      lcd.print("Pot:");
+      lcd.print(potValue);
+
+      lcd.setCursor(0, 1);
+      lcd.print("Serwo:");
+      lcd.print(servoAngle);
+      lcd.print((char)223);
+    }
+
+    if (lcdPage == 2) {
+      lcd.setCursor(0, 0);
+      lcd.print("Enkoder:");
+      lcd.print(encValue);
+
+      lcd.setCursor(0, 1);
+      lcd.print("Klik:");
+
+      if (encClicked) {
+        lcd.print("TAK");
+      } else {
+        lcd.print("NIE");
+      }
+
+      encClicked = false;
+    }
+  }
+}
+
+//podglad danych w monitorze portu
+void debugSerial() {
+  if (millis() - lastSerialTime >= 500) {
+    lastSerialTime = millis();
+
+    Serial.print("Dist: ");
+    if (distanceCm < 0) {
+      Serial.print("ERR");
+    } else {
+      Serial.print(distanceCm);
+      Serial.print(" cm");
+    }
+
+    Serial.print(" | Pot: ");
+    Serial.print(potValue);
+
+    Serial.print(" | Servo: ");
+    Serial.print(servoAngle);
+
+    Serial.print(" | Enc: ");
+    Serial.print(encValue);
+
+    Serial.print(" | SW: ");
+    Serial.println(digitalRead(encSW) == LOW ? "klik" : "-");
+  }
+}

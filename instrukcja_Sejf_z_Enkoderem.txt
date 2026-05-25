@@ -1,0 +1,31 @@
+Sejf z Enkoderem - instrukcja krok po kroku
+
+Projekt jest wersją demonstracyjną układu sejfu z enkoderem i pokazuje działanie elementów, które mogą być użyte w takim systemie.
+
+1. Cel projektu
+Projekt pokazuje działanie kilku elementów systemu wbudowanego: LCD I2C, enkodera, czujnika HC-SR04, potencjometru, serwa oraz diod LED.
+
+2. Montaz
+- Podłącz LCD do pinów GND, 5V, SDA - A4, SCL - A5.
+- Podłącz enkoder: CLK - D2, DT - D3, SW - D4, VCC - 5V, GND - GND.
+- Podłącz HC-SR04: TRIG - D5, ECHO - D6, VCC - 5V, GND - GND.
+- Podłącz serwo: sygnał D9, VCC 5V, GND GND.
+- Podłącz LED: zielona D10, żółta D11, czerwona D12, każda przez rezystor 1 kOhm.
+- Podłącz potencjometr: środek A0, boki 5V i GND.
+
+3. Uruchomienie
+- Otworz Arduino IDE.
+- Wybierz płytkę Arduino Uno.
+- Wybierz odpowiedni port COM.
+- Wgraj kod z pliku kod_Sejf_z_Enkoderem.txt.
+- Otworz Serial Monitor i ustaw 9600.
+
+4. Test działania
+- Po starcie układ wykonuje test LED i serwa.
+- LCD pokazuje kolejne ekrany: odległość, potencjometr/serwo, enkoder/klik.
+- Czujnik HC-SR04 steruje LED według progów 10/20/30 cm.
+- Potencjometr steruje katem serwa.
+- Enkoder zmienia wartość od 0 do 9.
+
+5. Licencja
+Projekt jest udostepniony jako CC0.

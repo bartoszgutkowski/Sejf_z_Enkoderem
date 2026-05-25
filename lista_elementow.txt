@@ -1,0 +1,17 @@
+Lista elementów projektu Sejf z Enkoderem:
+
+- Arduino UNO - 1 szt.
+- Plytka stykowa - 1 szt.
+- Wyświetlacz LCD 16x2 z interfejsem I2C - 1 szt.
+- Enkoder obrotowy - 1 szt.
+- Potencjometr obrotowy 10 kOhm - 1 szt.
+- Czujnik HC-SR04 - 1 szt.
+- Serwo SG90 - 1 szt.
+- Dioda LED zielona - 1 szt.
+- Dioda LED zolta - 1 szt.
+- Dioda LED czerwona - 1 szt.
+- Rezystor 1 kOhm - 3 szt.
+- Przewody Mesko-męskie - Kilkanaście szt.
+- Przewody Mesko-żeńskie - Kilka szt.
+- Kabel USB A-B do Arduino - 1 szt.
+

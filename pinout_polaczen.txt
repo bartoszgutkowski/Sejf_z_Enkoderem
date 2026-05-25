@@ -1,0 +1,36 @@
+Tabela polaczeń projektu Sejf z Enkoderem
+
+LCD 16x2 I2C:
+GND -> GND
+VCC -> 5V
+SDA -> A4
+SCL -> A5
+
+Enkoder obrotowy:
+CLK -> D2
+DT -> D3
+SW -> D4
+VCC -> 5V
+GND -> GND
+
+Czujnik HC-SR04:
+TRIG -> D5
+ECHO -> D6
+VCC -> 5V
+GND -> GND
+
+Serwo SG90:
+sygnał -> D9
+VCC/czerwony -> 5V
+GND/brązowy lub czarny -> GND
+
+Diody LED:
+zielona -> D10 przez rezystor
+zolta -> D11 przez rezystor
+czerwona -> D12 przez rezystor
+krótsze nóżki LED -> GND
+
+Potencjometr 10 kOhm:
+środkowa nóżka -> A0
+boczna nóżka -> 5V
+druga boczna nóżka -> GND
